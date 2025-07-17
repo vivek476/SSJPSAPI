@@ -22,6 +22,12 @@ namespace SSJPSAPI.Controllers
         public async Task<IActionResult> FacebookResponse()
         {
             var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            if (!result.Succeeded || result.Principal == null)
+            {
+                return BadRequest("Authentication failed. Facebook login was not successful.");
+            }
+
             var claims = result.Principal.Identities
                 .FirstOrDefault()?.Claims.Select(claim => new
                 {
@@ -31,5 +37,6 @@ namespace SSJPSAPI.Controllers
 
             return Ok(claims);
         }
+
     }
 }

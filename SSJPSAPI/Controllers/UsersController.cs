@@ -83,7 +83,8 @@ namespace SSJPSAPI.Controllers
             {
                 Token = token,
                 User = user,
-                Role = role
+                Role = role,
+                Status = "200"
             });
         }
 

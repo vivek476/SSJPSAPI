@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Common;
 using SSJPSAPI.Model;
+using System.Data;
 
 namespace SSJPSAPI.Controllers
 {
@@ -19,14 +21,24 @@ namespace SSJPSAPI.Controllers
         [HttpGet]
         public IActionResult GetRole()
         {
-            return Ok(_context.Roles.ToList());
+            var roles = _context.Roles.ToList();
+            return Ok(new
+            {
+                Data = roles,
+                Status = "200"
+            });
         }
 
         // [Route("GetRoleById")]
         [HttpGet("{id}")]
         public IActionResult GetRoleById(int id)
         {
-            return Ok(_context.Roles.Find(id));
+            var role = _context.Roles.Find(id);
+            return Ok(new
+            {
+                Data = role,
+                Status = "200"
+            });
         }
 
         // [Route("PutRole")]
@@ -35,7 +47,11 @@ namespace SSJPSAPI.Controllers
         {
             _context.Roles.Update(role);
             _context.SaveChanges();
-            return Ok("Data Updated Succesfully!!");
+            return Ok(new
+            {
+                Data = "Data Updated Successfully!!",
+                Status = "201"
+            }); 
         }
 
         // [Route("PostRole")]
@@ -45,7 +61,11 @@ namespace SSJPSAPI.Controllers
             _context.Roles.Add(role);
             _context.SaveChanges();
 
-            return Ok("Data Added Successfully!!");
+            return Ok(new
+            {
+                Data = "Data Added Successfully!!",
+                Status = "201"
+            });
         }
 
         // [Route("DeleteRoleById")]
@@ -56,7 +76,11 @@ namespace SSJPSAPI.Controllers
             _context.Roles.Remove(role);
             _context.SaveChanges();
 
-            return Ok("Data Deleted Successfully!!");
+            return Ok(new
+            {
+                Data = "Data Deleted Successfully!!",
+                Status = "204"
+            });
         }
     }
 }
