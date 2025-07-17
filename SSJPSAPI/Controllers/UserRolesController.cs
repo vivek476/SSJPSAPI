@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SSJPSAPI.Model;
+using System.Data;
 
 namespace SSJPSAPI.Controllers
 {
@@ -19,14 +20,24 @@ namespace SSJPSAPI.Controllers
         [HttpGet]
         public IActionResult GetUserRole()
         {
-            return Ok(_context.UserRoles.ToList());
+            var userroles = _context.UserRoles.ToList();
+            return Ok(new
+            {
+                Data = userroles,
+                Status = "200"
+            });
         }
 
         // [Route("GetUserRoleById")]
         [HttpGet("{id}")]
         public IActionResult GetUserRoleById(int id)
         {
-            return Ok(_context.UserRoles.Find(id));
+            var userrole = _context.UserRoles.Find(id);
+            return Ok(new
+            {
+                Data = userrole,
+                Status = "200"
+            }); ;
         }
 
         // [Route("PutUserRole")]
@@ -35,7 +46,11 @@ namespace SSJPSAPI.Controllers
         {
             _context.UserRoles.Update(userRole);
             _context.SaveChanges();
-            return Ok("Data Updated Successfully!!");
+            return Ok(new
+            {
+                Data = "Data Updated Successfully!!",
+                Status = "201"
+            });
         }
 
         // [Route("PostUserRole")]
@@ -44,7 +59,11 @@ namespace SSJPSAPI.Controllers
         {
             _context.UserRoles.Add(userRole);
             _context.SaveChanges();
-            return Ok("Data Added Successfully!!");
+            return Ok(new
+            {
+                Data = "Data Added Successfully!!",
+                Status = "201"
+            });
         }
 
         // [Route("DeleteUserRoleById")]
@@ -54,7 +73,11 @@ namespace SSJPSAPI.Controllers
             var userRole = _context.UserRoles.Find(id);
             _context.UserRoles.Remove(userRole);
             _context.SaveChanges();
-            return Ok("Data Deleted Successfully!!");
+            return Ok(new
+            {
+                Data = "Data Deleted Successfully!!",
+                Status = "204"
+            });
         }
     }
 }

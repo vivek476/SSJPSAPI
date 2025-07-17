@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SSJPSAPI.DTO;
 using SSJPSAPI.Model;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -26,14 +27,24 @@ namespace SSJPSAPI.Controllers
         [HttpGet]
         public IActionResult GetUser()
         {
-            return Ok(_context.Users.ToList());
+            var users = _context.Users.ToList();
+            return Ok(new
+            {
+                Data = users,
+                Status = "200"
+            });
         }
 
         // [Route("GetUserById")]
         [HttpGet("{id}")]
         public IActionResult GetUserById(int id)
         {
-            return Ok(_context.Users.Find(id));
+            var user = _context.Users.Find(id);
+            return Ok(new
+            {
+                Data = user,
+                Status = "200"
+            });
 
 
         }
@@ -44,7 +55,11 @@ namespace SSJPSAPI.Controllers
         {
             _context.Users.Update(user);
             _context.SaveChanges();
-            return Ok("Data Updated Successfully!!");
+            return Ok(new
+            {
+                Data = "Data Updated Successfully!!",
+                Status = "201"
+            });
         }
 
         // [Route("PostUser")]
@@ -66,7 +81,11 @@ namespace SSJPSAPI.Controllers
             _context.Users.Add(newUser);
             _context.SaveChanges();
 
-            return Ok("Signup Successful.");
+            return Ok(new
+            {
+                Data = "Signup Successfully!!",
+                Status = "201"
+            }); 
         }
 
         [HttpPost("login")]
@@ -120,7 +139,11 @@ namespace SSJPSAPI.Controllers
             _context.Users.Remove(user);
             _context.SaveChanges();
 
-            return Ok("Data Deleted Successfully!!");
+            return Ok(new
+            {
+                Data = "Data Deleted Successfully!!",
+                Status = "204"
+            });
         }
     }
 }
