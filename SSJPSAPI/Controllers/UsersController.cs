@@ -92,10 +92,11 @@ namespace SSJPSAPI.Controllers
         public IActionResult Login([FromBody] LoginRequest request)
         {
             var user = _context.Users.FirstOrDefault(u => u.Email == request.Email && u.Password == request.Password);
-            var userRole = _context.UserRoles.FirstOrDefault(x => x.UserId == user.Id);
-            var role = _context.Roles.FirstOrDefault(r => r.Id == userRole.RoleId);
             if (user == null)
                 return Unauthorized("Invalid Email Or Password.");
+
+            var userRole = _context.UserRoles.FirstOrDefault(x => x.UserId == user.Id);
+            var role = _context.Roles.FirstOrDefault(r => r.Id == userRole.RoleId);
 
             var token = GenerateJwtToken(user);
             return Ok(new
@@ -105,6 +106,8 @@ namespace SSJPSAPI.Controllers
                 Role = role,
                 Status = "200"
             });
+
+
         }
 
         private string GenerateJwtToken(User user)
