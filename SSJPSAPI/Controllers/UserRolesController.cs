@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SSJPSAPI.Model;
+using SSJPSAPI.DTO;
 using System.Data;
 
 namespace SSJPSAPI.Controllers
@@ -20,7 +21,17 @@ namespace SSJPSAPI.Controllers
         [HttpGet]
         public IActionResult GetUserRole()
         {
-            var userroles = _context.UserRoles.ToList();
+            var userroles = (from ur in _context.UserRoles
+                             join u in _context.Users on ur.UserId equals u.Id
+                             join r in _context.Roles on ur.RoleId equals r.Id
+                             select new UserRoleDto
+                             {
+                                 Id = ur.Id,
+                                 UserId = ur.UserId,
+                                 FullName = u.FullName,
+                                 RoleId = ur.RoleId,
+                                 RoleName = r.Name
+                             }).ToList();
             return Ok(new
             {
                 Data = userroles,
