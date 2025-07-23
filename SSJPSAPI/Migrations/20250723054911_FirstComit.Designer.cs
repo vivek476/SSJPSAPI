@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SSJPSAPI.Model;
 
@@ -10,9 +11,11 @@ using SSJPSAPI.Model;
 namespace SSJPSAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250723054911_FirstComit")]
+    partial class FirstComit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,34 +84,6 @@ namespace SSJPSAPI.Migrations
                     b.ToTable("Employeejpes");
                 });
 
-            modelBuilder.Entity("SSJPSAPI.Model.Feedback", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Feedbacks");
-                });
-
             modelBuilder.Entity("SSJPSAPI.Model.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -129,7 +104,7 @@ namespace SSJPSAPI.Migrations
                         new
                         {
                             Id = 1,
-                            Name = "Super Admin"
+                            Name = "SuperAdmin"
                         },
                         new
                         {
