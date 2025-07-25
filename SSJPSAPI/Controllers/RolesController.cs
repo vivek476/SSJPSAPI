@@ -45,14 +45,20 @@ namespace SSJPSAPI.Controllers
         [HttpPut("{id}")]
         public IActionResult PutRole(int id, Role role)
         {
-            _context.Roles.Update(role);
+            var existing = _context.Roles.Find(id);
+            if (existing == null)
+                return NotFound(new { Status = "404", Message = "Role not found" });
+
+            existing.Name = role.Name;
             _context.SaveChanges();
+
             return Ok(new
             {
                 Data = "Data Updated Successfully!!",
                 Status = "201"
-            }); 
+            });
         }
+
 
         // [Route("PostRole")]
         [HttpPost]
