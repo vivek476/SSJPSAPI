@@ -16,6 +16,18 @@ namespace SSJPSAPI.Controllers
             _context = context;
         }
 
+        [HttpGet]
+        public IActionResult GetCompanyjpc()
+        {
+            var companyjpcs = _context.Companyjpcs.ToList();
+            return Ok(new
+            {
+                Data = companyjpcs,
+                Status = "200"
+            });
+
+        }
+
         // ✅ GET Company by EmployeeId
         [HttpGet("by-employee/{employeeId}")]
         public async Task<IActionResult> GetCompanyByEmployeeId(string employeeId)

@@ -41,42 +41,51 @@ namespace SSJPSAPI.Controllers
         }
 
         [HttpPut("{employeeId}")]
-        public async Task<IActionResult> Update(int employeeId, [FromForm] Employeejpe updated, IFormFile imageFile)
+        public async Task<IActionResult> Update(int employeeId)
         {
             var employee = await _context.Employeejpes.FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
-            if (employee == null) return NotFound();
+            if (employee == null)
+                return NotFound();
 
-            if (imageFile != null)
+            var form = Request.Form;
+
+            // Update fields from form
+            employee.Firstname = form["Firstname"];
+            employee.Middlename = form["Middlename"];
+            employee.Lastname = form["Lastname"];
+            employee.Address = form["Address"];
+            employee.City = form["City"];
+            employee.Pincode = form["Pincode"];
+            employee.Mobile = form["Mobile"];
+            employee.Degree = form["Degree"];
+            employee.Skill = form["Skill"];
+            employee.Passyear = form["Passyear"];
+            employee.Experience = form["Experience"];
+            employee.Detail = form["Detail"];
+
+            // Handle Image Upload
+            var file = form.Files.FirstOrDefault();
+            if (file != null && file.Length > 0)
             {
                 string uploadDir = Path.Combine(_environment.WebRootPath, "Uploads");
                 if (!Directory.Exists(uploadDir))
                     Directory.CreateDirectory(uploadDir);
 
-                string uniqueName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                string uniqueName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
                 string filePath = Path.Combine(uploadDir, uniqueName);
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await imageFile.CopyToAsync(stream);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
 
                 employee.ImageUrl = Path.Combine("Uploads", uniqueName).Replace("\\", "/");
             }
 
-            // Update all fields
-            employee.Firstname = updated.Firstname;
-            employee.Middlename = updated.Middlename;
-            employee.Lastname = updated.Lastname;
-            employee.Address = updated.Address;
-            employee.City = updated.City;
-            employee.Pincode = updated.Pincode;
-            employee.Mobile = updated.Mobile;
-            employee.Degree = updated.Degree;
-            employee.Skill = updated.Skill;
-            employee.Passyear = updated.Passyear;
-            employee.Experience = updated.Experience;
-            employee.Detail = updated.Detail;
-
             await _context.SaveChangesAsync();
             return Ok(employee);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] Employeejpe model, IFormFile imageFile)
