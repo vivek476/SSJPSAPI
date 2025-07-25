@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using SSJPSAPI.Model;
 using SSJPSAPI.DTO;
-using System.Data;
 
 namespace SSJPSAPI.Controllers
 {
@@ -17,7 +16,7 @@ namespace SSJPSAPI.Controllers
             _context = context;
         }
 
-        // [Route("GetUserRole")]
+        // ✅ Get All UserRoles with FullName and RoleName
         [HttpGet]
         public IActionResult GetUserRole()
         {
@@ -32,6 +31,7 @@ namespace SSJPSAPI.Controllers
                                  RoleId = ur.RoleId,
                                  RoleName = r.Name
                              }).ToList();
+
             return Ok(new
             {
                 Data = userroles,
@@ -39,56 +39,91 @@ namespace SSJPSAPI.Controllers
             });
         }
 
-        // [Route("GetUserRoleById")]
+        // ✅ Get UserRole by ID
         [HttpGet("{id}")]
         public IActionResult GetUserRoleById(int id)
         {
             var userrole = _context.UserRoles.Find(id);
+
+            if (userrole == null)
+            {
+                return NotFound(new
+                {
+                    Message = $"UserRole with ID {id} not found",
+                    Status = "404"
+                });
+            }
+
             return Ok(new
             {
                 Data = userrole,
                 Status = "200"
-            }); ;
-        }
-
-        // [Route("PutUserRole")]
-        [HttpPut("{id}")]
-        public IActionResult PutUserRole(int id, UserRole userRole)
-        {
-            _context.UserRoles.Update(userRole);
-            _context.SaveChanges();
-            return Ok(new
-            {
-                Data = "Data Updated Successfully!!",
-                Status = "201"
             });
         }
 
-        // [Route("PostUserRole")]
+        // ✅ Update UserRole (Edit)
+        [HttpPut("{id}")]
+        public IActionResult PutUserRole(int id, UserRole userRole)
+        {
+            if (id != userRole.Id)
+            {
+                return BadRequest(new
+                {
+                    Message = "ID mismatch between route and body",
+                    Status = "400"
+                });
+            }
+
+            var existing = _context.UserRoles.AsNoTracking().FirstOrDefault(x => x.Id == id);
+
+            if (existing == null)
+            {
+                return NotFound(new
+                {
+                    Message = $"UserRole with ID {id} not found",
+                    Status = "404"
+                });
+            }
+
+            _context.UserRoles.Update(userRole);
+            _context.SaveChanges();
+
+            return NoContent(); // 204 response for successful update without body
+        }
+
+        // ✅ Create UserRole (Assign)
         [HttpPost]
         public IActionResult PostUserRole(UserRole userRole)
         {
             _context.UserRoles.Add(userRole);
             _context.SaveChanges();
-            return Ok(new
+
+            return StatusCode(201, new
             {
                 Data = "Data Added Successfully!!",
                 Status = "201"
             });
         }
 
-        // [Route("DeleteUserRoleById")]
+        // ✅ Delete UserRole
         [HttpDelete("{id}")]
         public IActionResult DeleteUserRoleById(int id)
         {
             var userRole = _context.UserRoles.Find(id);
+
+            if (userRole == null)
+            {
+                return NotFound(new
+                {
+                    Message = $"UserRole with ID {id} not found",
+                    Status = "404"
+                });
+            }
+
             _context.UserRoles.Remove(userRole);
             _context.SaveChanges();
-            return Ok(new
-            {
-                Data = "Data Deleted Successfully!!",
-                Status = "204"
-            });
+
+            return NoContent(); // 204 status
         }
     }
 }
