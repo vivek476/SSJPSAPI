@@ -11,6 +11,7 @@ namespace SSJPSAPI.Model
         public DbSet<Employeejpe> Employeejpes { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Companyjpc> Companyjpcs { get; set; }
+        public DbSet<Customer> Customers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
