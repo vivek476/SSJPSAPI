@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SSJPSAPI.Model;
+using SSJPSAPI.Data.Interface;
 using SSJPSAPI.DTO;
+using SSJPSAPI.Model;
 
 namespace SSJPSAPI.Controllers
 {
@@ -9,32 +10,21 @@ namespace SSJPSAPI.Controllers
     [ApiController]
     public class UserRolesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IUserRole _userRoleRepo;
 
-        public UserRolesController(ApplicationDbContext context)
+        public UserRolesController(IUserRole userRoleRepo)
         {
-            _context = context;
+            _userRoleRepo = userRoleRepo;
         }
 
         // ✅ Get All UserRoles with FullName and RoleName
         [HttpGet]
         public IActionResult GetUserRole()
         {
-            var userroles = (from ur in _context.UserRoles
-                             join u in _context.Users on ur.UserId equals u.Id
-                             join r in _context.Roles on ur.RoleId equals r.Id
-                             select new UserRoleDto
-                             {
-                                 Id = ur.Id,
-                                 UserId = ur.UserId,
-                                 FullName = u.FullName,
-                                 RoleId = ur.RoleId,
-                                 RoleName = r.Name
-                             }).ToList();
-
+            var userRoles = _userRoleRepo.GetAllUserRoles();
             return Ok(new
             {
-                Data = userroles,
+                Data = userRoles,
                 Status = "200"
             });
         }
@@ -43,9 +33,8 @@ namespace SSJPSAPI.Controllers
         [HttpGet("{id}")]
         public IActionResult GetUserRoleById(int id)
         {
-            var userrole = _context.UserRoles.Find(id);
-
-            if (userrole == null)
+            var userRole = _userRoleRepo.GetUserRoleById(id);
+            if (userRole == null)
             {
                 return NotFound(new
                 {
@@ -56,7 +45,7 @@ namespace SSJPSAPI.Controllers
 
             return Ok(new
             {
-                Data = userrole,
+                Data = userRole,
                 Status = "200"
             });
         }
@@ -74,8 +63,7 @@ namespace SSJPSAPI.Controllers
                 });
             }
 
-            var existing = _context.UserRoles.AsNoTracking().FirstOrDefault(x => x.Id == id);
-
+            var existing = _userRoleRepo.GetUserRoleById(userRole.Id);
             if (existing == null)
             {
                 return NotFound(new
@@ -85,22 +73,18 @@ namespace SSJPSAPI.Controllers
                 });
             }
 
-            _context.UserRoles.Update(userRole);
-            _context.SaveChanges();
-
-            return NoContent(); // 204 response for successful update without body
+            _userRoleRepo.UpdateUserRole(userRole);
+            return NoContent(); // 204
         }
 
         // ✅ Create UserRole (Assign)
         [HttpPost]
         public IActionResult PostUserRole(UserRole userRole)
         {
-            _context.UserRoles.Add(userRole);
-            _context.SaveChanges();
-
+            _userRoleRepo.CreateUserRole(userRole);
             return StatusCode(201, new
             {
-                Data = "Data Added Successfully!!",
+                Message = "UserRole created successfully",
                 Status = "201"
             });
         }
@@ -109,9 +93,8 @@ namespace SSJPSAPI.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeleteUserRoleById(int id)
         {
-            var userRole = _context.UserRoles.Find(id);
-
-            if (userRole == null)
+            var existing = _userRoleRepo.GetUserRoleById(id);
+            if (existing == null)
             {
                 return NotFound(new
                 {
@@ -120,10 +103,8 @@ namespace SSJPSAPI.Controllers
                 });
             }
 
-            _context.UserRoles.Remove(userRole);
-            _context.SaveChanges();
-
-            return NoContent(); // 204 status
+            _userRoleRepo.DeleteUserRole(id);
+            return NoContent(); // 204
         }
     }
 }

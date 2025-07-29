@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SSJPSAPI.Data.Interface;
 using SSJPSAPI.Model;
 
 namespace SSJPSAPI.Controllers
@@ -9,65 +10,52 @@ namespace SSJPSAPI.Controllers
     [ApiController]
     public class CompanyjpcsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICompanyjpc _companyjpc;
 
-        public CompanyjpcsController(ApplicationDbContext context)
+        public CompanyjpcsController(ICompanyjpc companyjpc)
         {
-            _context = context;
+            _companyjpc = companyjpc;
         }
 
         [HttpGet]
-        public IActionResult GetCompanyjpc()
+        public async Task<IActionResult> GetCompanyjpcs()
         {
-            var companyjpcs = _context.Companyjpcs.ToList();
+            var data = await _companyjpc.GetAllAsync();
             return Ok(new
             {
-                Data = companyjpcs,
-                Status = "200"
+                Data = data,
+                Status = 200
             });
-
         }
 
-        // ✅ GET Company by EmployeeId
         [HttpGet("by-employee/{employeeId}")]
-        public async Task<IActionResult> GetCompanyByEmployeeId(string employeeId)
+        public async Task<IActionResult> GetByEmployeeId(string employeeId)
         {
-            var company = await _context.Companyjpcs.FirstOrDefaultAsync(c => c.EmployeeId == employeeId);
+            var company = await _companyjpc.GetByEmployeeIdAsync(employeeId);
             if (company == null)
                 return NotFound();
+
             return Ok(company);
         }
 
-        // ✅ POST Add new company (ensure employeeId is provided)
         [HttpPost]
         public async Task<IActionResult> AddCompany([FromBody] Companyjpc company)
         {
             if (company == null || string.IsNullOrEmpty(company.EmployeeId))
                 return BadRequest("Invalid company data or missing employeeId.");
 
-            _context.Companyjpcs.Add(company);
-            await _context.SaveChangesAsync();
-            return Ok(company);
+            var created = await _companyjpc.AddAsync(company);
+            return Ok(created);
         }
 
-        // ✅ PUT Update company by employeeId
         [HttpPut("{employeeId}")]
         public async Task<IActionResult> UpdateCompany(string employeeId, [FromBody] Companyjpc updated)
         {
-            var company = await _context.Companyjpcs.FirstOrDefaultAsync(c => c.EmployeeId == employeeId);
-            if (company == null) return NotFound();
+            var result = await _companyjpc.UpdateAsync(employeeId, updated);
+            if (result == null)
+                return NotFound();
 
-            company.CompanyName = updated.CompanyName;
-            company.Address = updated.Address;
-            company.City = updated.City;
-            company.Pincode = updated.Pincode;
-            company.Mobile = updated.Mobile;
-            company.Email = updated.Email;
-            company.ContactPerson = updated.ContactPerson;
-            company.Detail = updated.Detail;
-
-            await _context.SaveChangesAsync();
-            return Ok(company);
+            return Ok(result);
         }
     }
 }

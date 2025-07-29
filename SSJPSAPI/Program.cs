@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Facebook;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SSJPSAPI.Data.Interface;
+using SSJPSAPI.Data.Repository;
 using SSJPSAPI.Model;
 using SSJPSAPI.Services;
 using System.Text;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Facebook;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +59,23 @@ builder.Services.AddControllers();
 
 // ✅ Add SwaggerGen with required version
 builder.Services.AddSwaggerGen();
+
+// ✅ Add Repositories
+builder.Services.AddScoped<IRole, RoleRepository>();
+builder.Services.AddScoped<IUser, UserRepository>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IUserRole, UserRoleRepository>();
+builder.Services.AddScoped<ICustomer, CustomerRepository>();
+builder.Services.AddScoped<IFeedback, FeedbackRepository>();
+builder.Services.AddScoped<ICompanyjpc, CompanyjpcRepository>();
+builder.Services.AddScoped<IPostjob, PostjobRepository>();
+builder.Services.AddScoped<IEmployeejpe, EmployeejpeRepository>();
+builder.Services.AddScoped<IUpdatePassword, UpdatePasswordRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+
+
+
 
 // ✅ Allow CORS (optional)
 builder.Services.AddCors(options =>

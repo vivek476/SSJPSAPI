@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SSJPSAPI.Data.Interface;
 using SSJPSAPI.Model;
 
 namespace SSJPSAPI.Controllers
@@ -9,64 +10,53 @@ namespace SSJPSAPI.Controllers
     [ApiController]
     public class PostjobsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IPostjob _postjob;
 
-        public PostjobsController(ApplicationDbContext context)
+        public PostjobsController(IPostjob postjob)
         {
-            _context = context;
+            _postjob = postjob;
         }
 
-        // GET: api/Postjobs
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Postjob>>> GetPostjobs()
         {
-            return await _context.Postjobs.ToListAsync();
+            var jobs = await _postjob.GetAllAsync();
+            return Ok(jobs);
         }
 
-        // GET: api/Postjobs/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Postjob>> GetPostjob(int id)
         {
-            var postjob = await _context.Postjobs.FindAsync(id);
-            if (postjob == null)
+            var job = await _postjob.GetByIdAsync(id);
+            if (job == null)
                 return NotFound();
 
-            return postjob;
+            return Ok(job);
         }
 
-        // POST: api/Postjobs
         [HttpPost]
         public async Task<ActionResult<Postjob>> PostPostjob(Postjob postjob)
         {
-            _context.Postjobs.Add(postjob);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetPostjob), new { id = postjob.Id }, postjob);
+            var created = await _postjob.AddAsync(postjob);
+            return CreatedAtAction(nameof(GetPostjob), new { id = created.Id }, created);
         }
 
-        // PUT: api/Postjobs
         [HttpPut]
         public async Task<IActionResult> PutPostjob(Postjob postjob)
         {
-            if (!_context.Postjobs.Any(e => e.Id == postjob.Id))
+            var success = await _postjob.UpdateAsync(postjob);
+            if (!success)
                 return NotFound();
-
-            _context.Entry(postjob).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // DELETE: api/Postjobs/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePostjob(int id)
         {
-            var postjob = await _context.Postjobs.FindAsync(id);
-            if (postjob == null)
+            var deleted = await _postjob.DeleteAsync(id);
+            if (!deleted)
                 return NotFound();
-
-            _context.Postjobs.Remove(postjob);
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }

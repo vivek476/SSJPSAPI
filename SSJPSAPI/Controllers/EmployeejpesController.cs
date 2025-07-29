@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol.Core.Types;
+using SSJPSAPI.Data.Interface;
 using SSJPSAPI.Model;
 using System.Data;
 using System.IO;
@@ -12,22 +14,21 @@ namespace SSJPSAPI.Controllers
     [ApiController]
     public class EmployeejpesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _environment;
+        private readonly IEmployeejpe _employeejpe;
 
-        public EmployeejpesController(ApplicationDbContext context, IWebHostEnvironment environment)
+        public EmployeejpesController(IEmployeejpe employeejpe)
         {
-            _context = context;
-            _environment = environment;
+           _employeejpe = employeejpe;
         }
 
+
         [HttpGet]
-        public IActionResult GetEmployeejpe()
+        public IActionResult GetEmployeejpes()
         {
-            var employeejpe = _context.Employeejpes.ToList();
+            var data = _employeejpe.GetAll();
             return Ok(new
             {
-                Data = employeejpe,
+                Data = data,
                 Status = "200"
             });
         }
@@ -35,89 +36,31 @@ namespace SSJPSAPI.Controllers
         [HttpGet("{employeeId}")]
         public async Task<IActionResult> GetByEmployeeId(int employeeId)
         {
-            var employee = await _context.Employeejpes.FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
+            var employee = await _employeejpe.GetByEmployeeIdAsync(employeeId);
             if (employee == null) return NotFound();
             return Ok(employee);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromForm] Employeejpe model, IFormFile? imageFile)
+        {
+            var result = await _employeejpe.CreateAsync(model, imageFile);
+            return Ok(result);
         }
 
         [HttpPut("{employeeId}")]
         public async Task<IActionResult> Update(int employeeId)
         {
-            var employee = await _context.Employeejpes.FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
-            if (employee == null)
-                return NotFound();
-
-            var form = Request.Form;
-
-            // Update fields from form
-            employee.Firstname = form["Firstname"];
-            employee.Middlename = form["Middlename"];
-            employee.Lastname = form["Lastname"];
-            employee.Address = form["Address"];
-            employee.City = form["City"];
-            employee.Pincode = form["Pincode"];
-            employee.Mobile = form["Mobile"];
-            employee.Degree = form["Degree"];
-            employee.Skill = form["Skill"];
-            employee.Passyear = form["Passyear"];
-            employee.Experience = form["Experience"];
-            employee.Detail = form["Detail"];
-
-            // Handle Image Upload
-            var file = form.Files.FirstOrDefault();
-            if (file != null && file.Length > 0)
-            {
-                string uploadDir = Path.Combine(_environment.WebRootPath, "Uploads");
-                if (!Directory.Exists(uploadDir))
-                    Directory.CreateDirectory(uploadDir);
-
-                string uniqueName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                string filePath = Path.Combine(uploadDir, uniqueName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-
-                employee.ImageUrl = Path.Combine("Uploads", uniqueName).Replace("\\", "/");
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(employee);
-        }
-
-
-        [HttpPost]
-        public async Task<IActionResult> Create([FromForm] Employeejpe model, IFormFile imageFile)
-        {
-            if (imageFile != null)
-            {
-                string uploadDir = Path.Combine(_environment.WebRootPath, "Uploads");
-                if (!Directory.Exists(uploadDir))
-                    Directory.CreateDirectory(uploadDir);
-
-                string uniqueName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                string filePath = Path.Combine(uploadDir, uniqueName);
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await imageFile.CopyToAsync(stream);
-
-                model.ImageUrl = Path.Combine("Uploads", uniqueName).Replace("\\", "/");
-            }
-
-            _context.Employeejpes.Add(model);
-            await _context.SaveChangesAsync();
-            return Ok(model);
+            var result = await _employeejpe.UpdateAsync(employeeId, Request.Form, Request.Form.Files.FirstOrDefault());
+            if (result == null) return NotFound();
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteEmployeejpeById(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var employeejpe = _context.Employeejpes.Find(id);
-            if (employeejpe == null)
-                return NotFound();
-
-            _context.Employeejpes.Remove(employeejpe);
-            _context.SaveChanges();
+            var success = await _employeejpe.DeleteAsync(id);
+            if (!success) return NotFound();
 
             return Ok(new
             {

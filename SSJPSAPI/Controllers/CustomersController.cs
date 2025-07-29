@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SSJPSAPI.Data.Interface;
 using SSJPSAPI.Model;
 
 namespace SSJPSAPI.Controllers
@@ -9,62 +10,54 @@ namespace SSJPSAPI.Controllers
     [ApiController]
     public class CustomersController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICustomer _customer;
 
-        public CustomersController(ApplicationDbContext context)
+        public CustomersController(ICustomer customer)
         {
-            _context = context;
+            _customer = customer;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
+        public async Task<IActionResult> GetCustomers()
         {
-            return await _context.Customers.ToListAsync();
+            var customers = await _customer.GetAllCustomersAsync();
+            return Ok(new { Data = customers, Status = "200" });
         }
 
-        // GET: api/Customers/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Customer>> GetCustomer(int id)
+        public async Task<IActionResult> GetCustomer(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
+            var customer = await _customer.GetCustomerByIdAsync(id);
             if (customer == null)
-                return NotFound();
+                return NotFound(new { Message = $"Customer with ID {id} not found", Status = "404" });
 
-            return customer;
+            return Ok(new { Data = customer, Status = "200" });
         }
 
-        // POST: api/Customers
         [HttpPost]
-        public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
+        public async Task<IActionResult> PostCustomer(Customer customer)
         {
-            _context.Customers.Add(customer);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
+            var created = await _customer.AddCustomerAsync(customer);
+            return CreatedAtAction(nameof(GetCustomer), new { id = created.Id }, new { Message = "Customer created successfully", Status = "201", Data = created });
         }
 
-        // PUT: api/Customers
         [HttpPut]
         public async Task<IActionResult> PutCustomer(Customer customer)
         {
-            if (!_context.Customers.Any(e => e.Id == customer.Id))
-                return NotFound();
-
-            _context.Entry(customer).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            var updated = await _customer.UpdateCustomerAsync(customer);
+            if (!updated)
+                return NotFound(new { Message = $"Customer with ID {customer.Id} not found", Status = "404" });
 
             return NoContent();
         }
 
-        // DELETE: api/Customers/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
-                return NotFound();
+            var deleted = await _customer.DeleteCustomerAsync(id);
+            if (!deleted)
+                return NotFound(new { Message = $"Customer with ID {id} not found", Status = "404" });
 
-            _context.Customers.Remove(customer);
-            await _context.SaveChangesAsync();
             return NoContent();
         }
     }

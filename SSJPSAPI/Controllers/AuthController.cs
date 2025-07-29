@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SSJPSAPI.Data.Interface;
 
 namespace SSJPSAPI.Controllers
 {
@@ -10,33 +11,31 @@ namespace SSJPSAPI.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly IAuthService _authService;
+
+        public AuthController(IAuthService authService)
+        {
+            _authService = authService;
+        }
+
         [HttpGet("login-facebook")]
         public IActionResult LoginWithFacebook()
         {
-            var redirectUrl = Url.Action("FacebookResponse", "ExternalAuth");
-            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            var redirectUrl = Url.Action("FacebookResponse", "Auth");
+            var properties = _authService.GetFacebookAuthProperties(redirectUrl);
             return Challenge(properties, FacebookDefaults.AuthenticationScheme);
         }
 
         [HttpGet("facebook-response")]
         public async Task<IActionResult> FacebookResponse()
         {
-            var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-            if (!result.Succeeded || result.Principal == null)
+            var claims = await _authService.GetFacebookClaimsAsync(HttpContext);
+            if (claims == null)
             {
                 return BadRequest("Authentication failed. Facebook login was not successful.");
             }
 
-            var claims = result.Principal.Identities
-                .FirstOrDefault()?.Claims.Select(claim => new
-                {
-                    claim.Type,
-                    claim.Value
-                });
-
             return Ok(claims);
         }
-
     }
 }

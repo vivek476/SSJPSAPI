@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SSJPSAPI.Data.Interface;
 using SSJPSAPI.Model;
 
 namespace SSJPSAPI.Controllers
@@ -8,30 +9,36 @@ namespace SSJPSAPI.Controllers
     [ApiController]
     public class FeedbacksController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IFeedback _feedback;
 
-        public FeedbacksController(ApplicationDbContext context) 
+        public FeedbacksController(IFeedback feedback) 
         {
-            _context = context;
+            _feedback = feedback;
         }
 
         [HttpPost]
-        public IActionResult PostFeedbacks([FromBody] Feedback feedback) {
+        public IActionResult PostFeedbacks([FromBody] Feedback feedback)
+        {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            _context.Feedbacks.Add(feedback);
-            _context.SaveChanges();
-            return Ok(feedback);
+            _feedback.AddFeedback(feedback);
+            return Ok(new
+            {
+                Message = "Feedback submitted successfully",
+                Data = feedback,
+                Status = 200
+            });
         }
 
         [HttpGet]
-        public IActionResult GetFeedbacks() {
-            var feedbacks = _context.Feedbacks.ToList();
-            return Ok(new 
+        public IActionResult GetFeedbacks()
+        {
+            var feedbacks = _feedback.GetAllFeedbacks();
+            return Ok(new
             {
                 Data = feedbacks,
-                Status = 200,
+                Status = 200
             });
         }
 

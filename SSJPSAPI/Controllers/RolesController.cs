@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Common;
+using SSJPSAPI.Data.Interface;
+using SSJPSAPI.Data.Repository;
 using SSJPSAPI.Model;
 using System.Data;
 
@@ -10,53 +12,35 @@ namespace SSJPSAPI.Controllers
     [ApiController]
     public class RolesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IRole _role;
 
-        public RolesController(ApplicationDbContext context)
+        public RolesController(IRole role)
         {
-            _context = context;
+            _role = role;
         }
 
         // [Route("GetRole")]
         [HttpGet]
         public IActionResult GetRole()
         {
-            var roles = _context.Roles.ToList();
-            return Ok(new
-            {
-                Data = roles,
-                Status = "200"
-            });
+            var roles = _role.GetRoles();
+            return Ok(new { Data = roles, Status = "200" });
         }
 
         // [Route("GetRoleById")]
         [HttpGet("{id}")]
         public IActionResult GetRoleById(int id)
         {
-            var role = _context.Roles.Find(id);
-            return Ok(new
-            {
-                Data = role,
-                Status = "200"
-            });
+            var role = _role.GetRoleById(id);
+            return Ok(new { Data = role, Status = "200" });
         }
 
         // [Route("PutRole")]
         [HttpPut("{id}")]
         public IActionResult PutRole(int id, Role role)
         {
-            var existing = _context.Roles.Find(id);
-            if (existing == null)
-                return NotFound(new { Status = "404", Message = "Role not found" });
-
-            existing.Name = role.Name;
-            _context.SaveChanges();
-
-            return Ok(new
-            {
-                Data = "Data Updated Successfully!!",
-                Status = "201"
-            });
+            _role.UpdateRole(id, role);
+            return Ok(new { Data = "Data Updated Successfully!!", Status = "201" });
         }
 
 
@@ -64,29 +48,16 @@ namespace SSJPSAPI.Controllers
         [HttpPost]
         public IActionResult PostRole(Role role)
         {
-            _context.Roles.Add(role);
-            _context.SaveChanges();
-
-            return Ok(new
-            {
-                Data = "Data Added Successfully!!",
-                Status = "201"
-            });
+            _role.AddRole(role);
+            return Ok(new { Data = "Data Added Successfully!!", Status = "201" });
         }
 
         // [Route("DeleteRoleById")]
         [HttpDelete("{id}")]
         public IActionResult DeleteRoleById(int id)
         {
-            var role =  _context.Roles.Find(id);
-            _context.Roles.Remove(role);
-            _context.SaveChanges();
-
-            return Ok(new
-            {
-                Data = "Data Deleted Successfully!!",
-                Status = "204"
-            });
+            _role.DeleteRole(id);
+            return Ok(new { Data = "Data Deleted Successfully!!", Status = "204" });
         }
     }
 }
