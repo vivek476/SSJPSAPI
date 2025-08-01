@@ -35,7 +35,23 @@ namespace SSJPSAPI.Controllers
                 return BadRequest("Authentication failed. Facebook login was not successful.");
             }
 
-            return Ok(claims);
+            string name = claims.FirstOrDefault(c => c.Key.Contains("name")).Value;
+            string email = claims.FirstOrDefault(c => c.Key.Contains("email")).Value;
+            string role = "Employee"; // default role for Facebook login
+
+            // ✅ Null check
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(email))
+            {
+                return BadRequest("Facebook did not return valid name or email.");
+            }
+
+            // ✅ Safe escaping
+            var queryString = $"name={Uri.EscapeDataString(name)}&email={Uri.EscapeDataString(email)}&role={Uri.EscapeDataString(role)}";
+
+            var redirectUrl = $"http://localhost:3000/facebook-callback?{queryString}";
+            return Redirect(redirectUrl);
         }
+
+
     }
 }
