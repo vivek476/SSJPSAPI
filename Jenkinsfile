@@ -37,7 +37,8 @@ pipeline {
                         dotnet publish -c Release -o ${PUBLISH_DIR}
 
                         echo "Stopping existing app if running..."
-                        pkill -f "dotnet ${PUBLISH_DIR}/SSJPSAPI.dll" || true
+                       pkill -f "dotnet ${PUBLISH_DIR}/SSJPSAPI.dll" 2>/dev/null || true
+
 
                         echo "Starting app in background..."
                         nohup dotnet ${PUBLISH_DIR}/SSJPSAPI.dll > /home/ubuntu/app.log 2>&1 &
