@@ -3,48 +3,39 @@ pipeline {
 
     environment {
         DOTNET_ROOT = "/usr/share/dotnet"
-        DOTNET_CLI_HOME = "${env.WORKSPACE}"
-        DEPLOY_PATH = "/var/www/backend"
+        PATH = "/usr/share/dotnet:$PATH"
     }
 
     stages {
-        stage('Install .NET SDK') {
+        stage('Checkout') {
             steps {
-                sh '''
-                    if ! command -v dotnet &> /dev/null
-                    then
-                        echo "Installing .NET SDK..."
-                        wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-                        sudo dpkg -i packages-microsoft-prod.deb
-                        sudo apt-get update
-                        sudo apt-get install -y apt-transport-https
-                        sudo apt-get install -y dotnet-sdk-8.0
-                    else
-                        echo ".NET SDK already installed"
-                    fi
-                '''
+                git branch: 'master',
+                    url: 'git@github.com:vivek476/SSJPSAPI.git'
             }
         }
 
-        stage('Clone') {
+        stage('Restore') {
             steps {
-                git branch: 'master', url: 'git@github.com:vivek476/SSJPSAPI.git'
+                sh 'dotnet restore'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'dotnet build --configuration Release'
             }
         }
 
         stage('Publish') {
             steps {
-                sh 'dotnet publish SSJPSAPI/SSJPSAPI.csproj -c Release -o published'
+                sh 'dotnet publish -c Release -o out'
             }
         }
 
         stage('Deploy') {
             steps {
                 sh '''
-                    sudo pkill -f "dotnet ${DEPLOY_PATH}/SSJPSAPI.dll" || true
-                    sudo rm -rf ${DEPLOY_PATH} && sudo mkdir -p ${DEPLOY_PATH}
-                    sudo cp -r published/* ${DEPLOY_PATH}/
-                    nohup dotnet ${DEPLOY_PATH}/SSJPSAPI.dll --urls=http://0.0.0.0:5269 &
+                    cp -r out/* /var/www/html/
                 '''
             }
         }
