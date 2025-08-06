@@ -1,52 +1,32 @@
 pipeline {
     agent any
 
-    triggers {
-        githubPush()
-    }
-
     environment {
-        EC2_IP = '34.230.40.32'
-        SSH_CRED = 'cf0fd30a-c4e7-4017-a7b5-f7cd712eb3c5'
-        APP_DIR = '/home/ubuntu/backend-app'
-        GIT_REPO = 'https://github.com/vivek476/SSJPSAPI.git'
-        DOTNET_PROJECT_PATH = '/home/ubuntu/backend-app/SSJPSAPI'
-        PUBLISH_DIR = '/home/ubuntu/published-api'
+        DOTNET_ROOT = "/usr/share/dotnet"
+        DOTNET_CLI_HOME = "${env.WORKSPACE}"
+        DEPLOY_PATH = "/var/www/backend"
     }
 
     stages {
-        stage('Deploy .NET Core App') {
+        stage('Clone') {
             steps {
-                sshagent (credentials: [SSH_CRED]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} '
-                        echo "Setting environment variables for .NET 8..."
-                        export DOTNET_ROOT=\$HOME/.dotnet
-                        export PATH=\$PATH:\$HOME/.dotnet
+                git branch: 'master', url: 'git@github.com:vivek476/SSJPSAPI.git'
+            }
+        }
 
-                        echo "Removing old app..."
-                        rm -rf ${APP_DIR} ${PUBLISH_DIR}
+        stage('Publish') {
+            steps {
+                sh 'dotnet publish SSJPSAPI/SSJPSAPI.csproj -c Release -o published'
+            }
+        }
 
-                        echo "Cloning repo..."
-                        git clone ${GIT_REPO} ${APP_DIR}
-                        
-                        echo "Building .NET project..."
-                        cd ${DOTNET_PROJECT_PATH}
-                        dotnet clean
-                        dotnet build --configuration Release
-                        dotnet publish -c Release -o ${PUBLISH_DIR}
-
-                        echo "Stopping existing app if running..."
-                       pkill -f "dotnet ${PUBLISH_DIR}/SSJPSAPI.dll" 2>/dev/null || true
-
-
-                        echo "Starting app in background..."
-                        nohup dotnet ${PUBLISH_DIR}/SSJPSAPI.dll > /home/ubuntu/app.log 2>&1 &
-                    '
-                    """
-                }
+        stage('Deploy') {
+            steps {
+                sh 'sudo pkill -f "dotnet ${DEPLOY_PATH}/SSJPSAPI.dll" || true'
+                sh 'sudo rm -rf ${DEPLOY_PATH} && sudo mkdir -p ${DEPLOY_PATH}'
+                sh 'sudo cp -r published/* ${DEPLOY_PATH}/'
+                sh 'nohup dotnet ${DEPLOY_PATH}/SSJPSAPI.dll --urls=http://0.0.0.0:5269 &'
             }
         }
     }
 }
-
