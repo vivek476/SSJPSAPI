@@ -2,41 +2,37 @@ pipeline {
     agent any
 
     environment {
-        DOTNET_ROOT = "/usr/share/dotnet"
-        PATH = "/usr/share/dotnet:$PATH"
+        DOTNET_ROOT = "/home/ubuntu/.dotnet"
+        PATH = "${env.PATH}:${DOTNET_ROOT}:${DOTNET_ROOT}/tools"
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'master',
-                    url: 'git@github.com:vivek476/SSJPSAPI.git'
-            }
-        }
-
         stage('Restore') {
             steps {
-                sh 'dotnet restore'
+                sh '''
+                    echo "Using dotnet version:"
+                    dotnet --version
+                    dotnet restore
+                '''
             }
         }
-
         stage('Build') {
             steps {
-                sh 'dotnet build --configuration Release'
+                sh '''
+                    dotnet build
+                '''
             }
         }
-
         stage('Publish') {
             steps {
-                sh 'dotnet publish -c Release -o out'
+                sh '''
+                    dotnet publish -c Release -o out
+                '''
             }
         }
-
         stage('Deploy') {
             steps {
-                sh '''
-                    cp -r out/* /var/www/html/
-                '''
+                echo "Deploy your project here..."
             }
         }
     }
