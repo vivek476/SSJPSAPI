@@ -1,19 +1,15 @@
 pipeline {
     agent any
-
     environment {
-        DOTNET_ROOT = '/home/ubuntu/.dotnet'
-        PATH = "/home/ubuntu/.dotnet:/home/ubuntu/.dotnet/tools:${env.PATH}"
+        DOTNET_ROOT = "/opt/dotnet"
+        PATH = "/opt/dotnet:$PATH"
     }
-
     stages {
         stage('Restore') {
             steps {
                 sh '''
                     echo Using dotnet version:
-                    chmod +x /home/ubuntu/.dotnet/dotnet
                     dotnet --version
-                    dotnet restore
                 '''
             }
         }
@@ -26,15 +22,13 @@ pipeline {
 
         stage('Publish') {
             steps {
-                sh 'dotnet publish -c Release -o out'
+                sh 'dotnet publish -c Release -o published-app'
             }
         }
 
         stage('Deploy') {
             steps {
-                sh '''
-                    echo Deploy your app here...
-                '''
+                sh 'echo Deploy your app here'
             }
         }
     }
